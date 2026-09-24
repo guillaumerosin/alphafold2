@@ -1,0 +1,22 @@
+Nombre de résidus : 149
+Écart max JSON vs B-factor PDB : 0.00
+
+Scores par modèle (rang : pLDDT moyen, pTM) :
+  rang 1 : 82.8, pTM = 0.490
+  rang 2 : 81.7, pTM = 0.480
+  rang 3 : 80.1, pTM = 0.470
+  rang 4 : 79.3, pTM = 0.460
+  rang 5 : 78.6, pTM = 0.460
+
+pLDDT meilleur modèle : moyenne 82.8, médiane 86.3, min 43.0 (résidu 149)
+Répartition des résidus par classe de confiance :
+  Très élevée (≥ 90)       32 résidus ( 21.5 %)
+  Élevée (70–90)          100 résidus ( 67.1 %)
+  Faible (50–70)           15 résidus ( 10.1 %)
+  Très faible (< 50)        2 résidus (  1.3 %)
+Régions pLDDT < 70 : 1-5, 40-40, 75-83, 148-149
+
+PAE : moyenne 12.3 Å, max 30.2 Å
+PAE moyenne entre domaines (lignes = résidus évalués, colonnes = alignés sur) :
+  domaine 1 (1-78) :   5.1   20.6
+  domaine 2 (82-149) :  19.7    3.8

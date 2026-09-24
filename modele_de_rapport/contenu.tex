@@ -74,9 +74,9 @@ Les étapes~2 et~3 sont regroupées dans le script \texttt{scripts/predict.sh}, 
 
 \paragraph{Difficultés rencontrées et solutions.}
 \begin{itemize}
-  \item \textbf{Pas de GPU} : l'image est compilée pour CUDA, mais JAX bascule automatiquement sur le CPU (message \texttt{no GPU detected, will be using CPU}). Le calcul fonctionne, mais il est lent : \todo{durée} au total pour 149 résidus (voir section~\ref{sec:test}).
+  \item \textbf{Pas de GPU} : l'image est compilée pour CUDA, mais JAX bascule automatiquement sur le CPU (message \texttt{no GPU detected, will be using CPU}). Le calcul fonctionne, mais il est lent : 1~h~57 au total pour 149 résidus et 5 modèles, soit environ 23~min par modèle (voir section~\ref{sec:test}).
   \item \textbf{Fichiers appartenant à \texttt{root}} : par défaut, le conteneur écrit ses résultats en tant que root. On lance donc Docker avec \texttt{--user \$(id -u):\$(id -g) -e HOME=/tmp}.
-  \item \textbf{Noms de fichiers très longs} : ColabFold nomme les sorties d'après l'en-tête FASTA complet (\texttt{sp\_P0DP23\_CALM1\_HUMAN\_Calmodulin-1\_OS\_Homo\ldots}). Il faut raccourcir l'en-tête (\texttt{>P0DP23}) avant de lancer le calcul.
+  \item \textbf{Noms de fichiers très longs} : ColabFold nomme les sorties d'après l'en-tête FASTA complet (une centaine de caractères, par exemple \texttt{sp\_P0DP23\_CALM1\_\ldots}). Il faut raccourcir l'en-tête (\texttt{>P0DP23}) avant de lancer le calcul.
   \item \textbf{Mémoire} : TensorFlow affiche des avertissements \texttt{Allocation exceeds 10\% of free system memory}. Ils sont sans conséquence ici : la consommation plafonne à environ 4~Go.
   \item \textbf{Modèle de rapport} : \texttt{inputenc[utf8x]} et un \texttt{\textbackslash lstset} faisant référence à des macros non définies empêchaient la compilation ; nous les avons remplacés par \texttt{utf8}.
 \end{itemize}
@@ -94,7 +94,7 @@ Les étapes~2 et~3 sont regroupées dans le script \texttt{scripts/predict.sh}, 
 
 \paragraph{Ce qui a fonctionné.} L'image Docker de ColabFold a fonctionné du premier coup sur une machine sans GPU. Le serveur MMseqs2 a construit le MSA en quelques secondes. Le point essentiel est que toute la chaîne, de la séquence à la structure puis aux figures, tient en deux commandes (\texttt{predict.sh} puis \texttt{analyse.py}), sans installation de bases de données.
 
-\paragraph{Ce qui a posé problème.} Le temps de calcul sur CPU (\todo{durée}) est le principal inconvénient. Il devient prohibitif au-delà de quelques centaines de résidus, car le coût croît à peu près comme le carré de la longueur. Viennent ensuite des détails pratiques (droits des fichiers, noms trop longs) qui ne sont documentés nulle part de façon centralisée.
+\paragraph{Ce qui a posé problème.} Le temps de calcul sur CPU (1~h~57 pour 149 résidus) est le principal inconvénient. Il devient prohibitif au-delà de quelques centaines de résidus, car le coût croît à peu près comme le carré de la longueur. Viennent ensuite des détails pratiques (droits des fichiers, noms trop longs) qui ne sont documentés nulle part de façon centralisée.
 
 \paragraph{Recommandations.}
 \begin{itemize}

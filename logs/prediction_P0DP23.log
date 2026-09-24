@@ -19,3 +19,40 @@ precompute all MSAs with `colabfold_search` or host your own API and pass it to 
 2026-09-24 12:04:09.407015: W tensorflow/tsl/framework/cpu_allocator_impl.cc:83] Allocation of 43769856 exceeds 10% of free system memory.
 2026-09-24 12:04:09.675435: W tensorflow/tsl/framework/cpu_allocator_impl.cc:83] Allocation of 292967376 exceeds 10% of free system memory.
 2026-09-24 12:04:09.752855: W tensorflow/tsl/framework/cpu_allocator_impl.cc:83] Allocation of 43769856 exceeds 10% of free system memory.
+2026-09-24 12:04:01,568 Setting max_seq=512, max_extra_seq=5120
+2026-09-24 12:11:59,636 alphafold2_ptm_model_1_seed_000 recycle=0 pLDDT=75.3 pTM=0.452
+2026-09-24 12:17:27,724 alphafold2_ptm_model_1_seed_000 recycle=1 pLDDT=79.3 pTM=0.455 tol=2.49
+2026-09-24 12:23:21,528 alphafold2_ptm_model_1_seed_000 recycle=2 pLDDT=79.7 pTM=0.458 tol=0.336
+2026-09-24 12:29:03,114 alphafold2_ptm_model_1_seed_000 recycle=3 pLDDT=79.3 pTM=0.458 tol=0.276
+2026-09-24 12:29:03,114 alphafold2_ptm_model_1_seed_000 took 1492.5s (3 recycles)
+2026-09-24 12:34:50,310 alphafold2_ptm_model_2_seed_000 recycle=0 pLDDT=76.6 pTM=0.442
+2026-09-24 12:40:37,411 alphafold2_ptm_model_2_seed_000 recycle=1 pLDDT=77.9 pTM=0.451 tol=0.994
+2026-09-24 12:46:11,116 alphafold2_ptm_model_2_seed_000 recycle=2 pLDDT=78.2 pTM=0.45 tol=0.541
+2026-09-24 12:52:11,643 alphafold2_ptm_model_2_seed_000 recycle=3 pLDDT=78.6 pTM=0.461 tol=0.332
+2026-09-24 12:52:11,645 alphafold2_ptm_model_2_seed_000 took 1388.5s (3 recycles)
+2026-09-24 12:58:17,783 alphafold2_ptm_model_3_seed_000 recycle=0 pLDDT=79.7 pTM=0.468
+2026-09-24 13:04:09,331 alphafold2_ptm_model_3_seed_000 recycle=1 pLDDT=79.8 pTM=0.469 tol=1.69
+2026-09-24 13:09:45,386 alphafold2_ptm_model_3_seed_000 recycle=2 pLDDT=80.4 pTM=0.468 tol=0.776
+2026-09-24 13:15:28,384 alphafold2_ptm_model_3_seed_000 recycle=3 pLDDT=80.1 pTM=0.466 tol=0.729
+2026-09-24 13:15:28,384 alphafold2_ptm_model_3_seed_000 took 1396.7s (3 recycles)
+2026-09-24 13:21:11,191 alphafold2_ptm_model_4_seed_000 recycle=0 pLDDT=82.9 pTM=0.488
+2026-09-24 13:26:47,538 alphafold2_ptm_model_4_seed_000 recycle=1 pLDDT=84 pTM=0.497 tol=0.662
+2026-09-24 13:32:23,670 alphafold2_ptm_model_4_seed_000 recycle=2 pLDDT=83.6 pTM=0.487 tol=0.188
+2026-09-24 13:38:18,662 alphafold2_ptm_model_4_seed_000 recycle=3 pLDDT=82.8 pTM=0.487 tol=0.366
+2026-09-24 13:38:18,663 alphafold2_ptm_model_4_seed_000 took 1370.3s (3 recycles)
+2026-09-24 13:44:02,449 alphafold2_ptm_model_5_seed_000 recycle=0 pLDDT=81 pTM=0.484
+2026-09-24 13:49:45,666 alphafold2_ptm_model_5_seed_000 recycle=1 pLDDT=82 pTM=0.489 tol=0.716
+2026-09-24 13:55:30,550 alphafold2_ptm_model_5_seed_000 recycle=2 pLDDT=82.2 pTM=0.484 tol=0.267
+2026-09-24 14:01:15,588 alphafold2_ptm_model_5_seed_000 recycle=3 pLDDT=81.7 pTM=0.484 tol=0.483
+2026-09-24 14:01:15,588 alphafold2_ptm_model_5_seed_000 took 1376.9s (3 recycles)
+2026-09-24 14:01:15,613 reranking models by 'plddt' metric
+2026-09-24 14:01:15,614 rank_001_alphafold2_ptm_model_4_seed_000 pLDDT=82.8 pTM=0.487
+2026-09-24 14:01:15,614 rank_002_alphafold2_ptm_model_5_seed_000 pLDDT=81.7 pTM=0.484
+2026-09-24 14:01:15,614 rank_003_alphafold2_ptm_model_3_seed_000 pLDDT=80.1 pTM=0.466
+2026-09-24 14:01:15,614 rank_004_alphafold2_ptm_model_1_seed_000 pLDDT=79.3 pTM=0.458
+2026-09-24 14:01:15,615 rank_005_alphafold2_ptm_model_2_seed_000 pLDDT=78.6 pTM=0.461
+2026-09-24 14:01:16,481 Done
+
+real	117m27.588s
+user	0m0.242s
+sys	0m0.096s

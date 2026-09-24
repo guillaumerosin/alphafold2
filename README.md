@@ -28,7 +28,7 @@ Le rapport (contexte, choix technique, analyse) se trouve dans [modele_de_rappor
    scripts/predict.sh data/MA_PROT.fasta
    ```
    Au premier lancement, le script télécharge l'image Docker (~10 Go) et les poids (~5 Go).
-4. **Temps à prévoir** : sur CPU (12 cœurs), **TEMPS_TOTAL pour 149 résidus** avec 5 modèles. Le coût croît à peu près comme le carré de la longueur. Sur GPU ou sur Colab, comptez quelques minutes.
+4. **Temps à prévoir** : sur CPU (12 cœurs), **environ 2 h pour 149 résidus** avec 5 modèles (~23 min par modèle). Le coût croît à peu près comme le carré de la longueur. Sur GPU ou sur Colab, comptez quelques minutes.
 5. **Récupérer les résultats** : dans `results/MA_PROT/`. La structure est `*_unrelaxed_rank_001_*.pdb` et les scores sont dans `*_scores_rank_001_*.json`.
 6. **Lancer l'analyse pLDDT** :
    ```bash

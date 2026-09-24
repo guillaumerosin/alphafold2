@@ -13,6 +13,7 @@ Il produit dans le dossier de sortie :
   - plddt_rank_001.csv   : pLDDT par résidu du meilleur modèle ;
   - plddt.png            : profil pLDDT (meilleur modèle + autres modèles) ;
   - pae.png              : matrice PAE du meilleur modèle ;
+  - structure.png        : trace Cα du meilleur modèle colorée par pLDDT ;
   - resume.txt           : statistiques résumées (moyennes, classes, régions faibles).
 """
 
@@ -50,14 +51,42 @@ def find_scores(results_dir):
     return sorted(ranked)
 
 
-def plddt_from_pdb(pdb_path):
-    """Lit le pLDDT stocké dans la colonne B-factor des atomes CA du PDB."""
-    values = []
+def read_ca(pdb_path):
+    """Lit les atomes CA du PDB : coordonnées (N×3) et B-factor (= pLDDT chez AlphaFold2)."""
+    coords, bfac = [], []
     with open(pdb_path) as fh:
         for line in fh:
             if line.startswith("ATOM") and line[12:16].strip() == "CA":
-                values.append(float(line[60:66]))
-    return np.array(values)
+                coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+                bfac.append(float(line[60:66]))
+    return np.array(coords), np.array(bfac)
+
+
+def plddt_color(v):
+    return next(c for lo, hi, _, c in PLDDT_CLASSES if lo <= v < hi)
+
+
+def plot_structure(coords, plddt, out_png):
+    """Deux vues orthogonales de la trace Cα, orientée selon ses axes principaux."""
+    centered = coords - coords.mean(axis=0)
+    _, _, axes = np.linalg.svd(centered, full_matrices=False)
+    xyz = centered @ axes.T  # axe 1 = plus grande dimension de la protéine
+    fig, axs = plt.subplots(1, 2, figsize=(10, 4))
+    for ax, (a, b), title in zip(axs, [(0, 1), (0, 2)], ["vue de face", "vue du dessus"]):
+        for k in range(len(xyz) - 1):
+            ax.plot(xyz[k:k + 2, a], xyz[k:k + 2, b], color=plddt_color(plddt[k]), lw=2.5,
+                    solid_capstyle="round")
+        ax.annotate("N", xyz[0, [a, b]], fontsize=9, weight="bold")
+        ax.annotate("C", xyz[-1, [a, b]], fontsize=9, weight="bold")
+        ax.set_aspect("equal")
+        ax.set_title(title, fontsize=10)
+        ax.set_xlabel("Å")
+    handles = [plt.Line2D([], [], color=c, lw=3, label=lab) for _, _, lab, c in PLDDT_CLASSES]
+    fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=8, title="pLDDT")
+    fig.suptitle("Structure prédite (rang 1) : trace Cα colorée par pLDDT")
+    fig.tight_layout(rect=(0, 0.14, 1, 1))
+    fig.savefig(out_png, dpi=200)
+    plt.close(fig)
 
 
 def segments(mask):
@@ -148,9 +177,10 @@ def main():
     pdbs = glob.glob(os.path.join(args.results_dir, "*_unrelaxed_rank_001_*.pdb"))
     pdb_check = ""
     if pdbs:
-        from_pdb = plddt_from_pdb(pdbs[0])
+        coords, from_pdb = read_ca(pdbs[0])
         diff = np.abs(from_pdb - plddt).max() if len(from_pdb) == n else float("nan")
         pdb_check = f"Écart max JSON vs B-factor PDB : {diff:.2f}\n"
+        plot_structure(coords, plddt, os.path.join(args.out, "structure.png"))
 
     # CSV par résidu
     with open(os.path.join(args.out, "plddt_rank_001.csv"), "w", newline="") as fh:
