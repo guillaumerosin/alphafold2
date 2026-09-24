@@ -14,8 +14,6 @@ Il produit dans le dossier de sortie :
   - plddt.png            : profil pLDDT (meilleur modèle + autres modèles) ;
   - pae.png              : matrice PAE du meilleur modèle ;
   - resume.txt           : statistiques résumées (moyennes, classes, régions faibles).
-
-Script développé avec l'aide de Claude (Claude Code) — voir README, section « Utilisation de l'IA ».
 """
 
 import argparse

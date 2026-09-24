@@ -203,7 +203,3 @@ Fichiers produits par `analyse.py` dans `figures/<nom>/` : `plddt.png`, `pae.png
 - AlphaFold, dépôt officiel : <https://github.com/google-deepmind/alphafold>
 - EMBL-EBI Training, *AlphaFold: A practical guide* : <https://www.ebi.ac.uk/training/online/courses/alphafold/> (pages pLDDT et PAE)
 - UniProt P0DP23 : <https://www.uniprot.org/uniprotkb/P0DP23>
-
-## Utilisation de l'IA
-
-La mise en place de l'environnement Docker, les scripts `predict.sh` et `analyse.py`, ce README et le rapport ont été réalisés avec l'aide de **Claude (Anthropic, via Claude Code)**. Lien vers la conversation : LIEN_CONVERSATION_A_AJOUTER

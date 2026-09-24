@@ -12,3 +12,5 @@
 2026-09-24 12:23:21,528 alphafold2_ptm_model_1_seed_000 recycle=2 pLDDT=79.7 pTM=0.458 tol=0.336
 2026-09-24 12:29:03,114 alphafold2_ptm_model_1_seed_000 recycle=3 pLDDT=79.3 pTM=0.458 tol=0.276
 2026-09-24 12:29:03,114 alphafold2_ptm_model_1_seed_000 took 1492.5s (3 recycles)
+2026-09-24 12:34:50,310 alphafold2_ptm_model_2_seed_000 recycle=0 pLDDT=76.6 pTM=0.442
+2026-09-24 12:40:37,411 alphafold2_ptm_model_2_seed_000 recycle=1 pLDDT=77.9 pTM=0.451 tol=0.994
