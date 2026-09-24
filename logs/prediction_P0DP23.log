@@ -1,0 +1,21 @@
+
+WARNING: You are welcome to use the default MSA server, however keep in mind that it's a
+limited shared resource only capable of processing a few thousand MSAs per day. Please
+submit jobs only from a single IP address. We reserve the right to limit access to the
+server case-by-case when usage exceeds fair use. If you require more MSAs: You can 
+precompute all MSAs with `colabfold_search` or host your own API and pass it to `--host-url`
+
+  0%|          | 0/150 [elapsed: 00:00 remaining: ?]SUBMIT:   0%|          | 0/150 [elapsed: 00:00 remaining: ?]2026-09-24 12:03:51,923 Running colabfold 1.5.5
+2026-09-24 12:03:51,956 Unable to initialize backend 'cuda': FAILED_PRECONDITION: No visible GPU devices.
+2026-09-24 12:03:51,956 Unable to initialize backend 'rocm': NOT_FOUND: Could not find registered platform with name: "rocm". Available platform names are: Interpreter CUDA
+2026-09-24 12:03:51,956 Unable to initialize backend 'tpu': module 'jaxlib.xla_extension' has no attribute 'get_tpu_client'
+2026-09-24 12:03:51,959 WARNING: no GPU detected, will be using CPU
+2026-09-24 12:03:52,336 generated new fontManager
+2026-09-24 12:03:54,606 Found 5 citations for tools or databases
+2026-09-24 12:03:54,607 Query 1/1: sp_P0DP23_CALM1_HUMAN_Calmodulin-1_OS_Homo_sapiens_OX_9606_GN_CALM1_PE_1_SV_1 (length 149)
+COMPLETE:   0%|          | 0/150 [elapsed: 00:01 remaining: ?]COMPLETE: 100%|██████████| 150/150 [elapsed: 00:01 remaining: 00:00]COMPLETE: 100%|██████████| 150/150 [elapsed: 00:05 remaining: 00:00]
+2026-09-24 12:04:09.212311: W tensorflow/tsl/framework/cpu_allocator_impl.cc:83] Allocation of 286943008 exceeds 10% of free system memory.
+2026-09-24 12:04:09.215221: W tensorflow/tsl/framework/cpu_allocator_impl.cc:83] Allocation of 292967376 exceeds 10% of free system memory.
+2026-09-24 12:04:09.407015: W tensorflow/tsl/framework/cpu_allocator_impl.cc:83] Allocation of 43769856 exceeds 10% of free system memory.
+2026-09-24 12:04:09.675435: W tensorflow/tsl/framework/cpu_allocator_impl.cc:83] Allocation of 292967376 exceeds 10% of free system memory.
+2026-09-24 12:04:09.752855: W tensorflow/tsl/framework/cpu_allocator_impl.cc:83] Allocation of 43769856 exceeds 10% of free system memory.

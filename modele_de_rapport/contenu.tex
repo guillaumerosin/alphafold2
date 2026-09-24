@@ -1,0 +1,111 @@
+%====================================================================
+\section{AlphaFold2 : principe général}
+%====================================================================
+
+\paragraph{Le problème.} La séquence d'acides aminés d'une protéine détermine sa structure tridimensionnelle~\cite{anfinsen1973}, mais le nombre de conformations possibles est tel qu'une exploration exhaustive est impossible. On appelle cela le \og problème du repliement \fg{}~\cite{ebi_course}. Plutôt que de simuler le repliement physique, AlphaFold2~\cite{jumper2021} \emph{apprend}, à partir des structures connues de la PDB, la relation entre séquence et structure.
+
+\paragraph{Entrée et sortie.} L'utilisateur fournit uniquement la \textbf{séquence} de la protéine (format FASTA). AlphaFold2 renvoie les \textbf{coordonnées 3D} de tous les atomes lourds (fichier PDB ou mmCIF), accompagnées de \textbf{mesures de confiance}.
+
+\paragraph{Le MSA et la coévolution.} La première étape consiste à rechercher, dans de grandes bases de séquences, des protéines \emph{homologues} (issues d'un ancêtre commun) et à les aligner : c'est l'\textbf{alignement multiple de séquences} (MSA). Chaque ligne est une séquence homologue et chaque colonne une position équivalente de la protéine. Le MSA apporte deux informations structurales :
+\begin{itemize}
+  \item la \textbf{conservation} : une position qui ne varie jamais est probablement essentielle (cœur hydrophobe, site actif) ;
+  \item la \textbf{coévolution} : si deux résidus sont en contact, une mutation de l'un est souvent compensée par une mutation de l'autre, sinon la protéine perd sa structure. Deux colonnes qui varient \emph{ensemble} indiquent donc deux résidus probablement proches dans l'espace~\cite{ebi_course}.
+\end{itemize}
+Plus le MSA est profond et diversifié, plus ces signaux sont fiables. À l'inverse, une protéine \og orpheline \fg{}, sans homologues, est en général mal prédite.
+
+\paragraph{Les grandes étapes.} La figure~\ref{fig:schema} résume le processus :
+\begin{enumerate}
+  \item \textbf{Recherche d'homologues} dans les bases de séquences (MSA) et, en option, de structures connues similaires (\emph{gabarits}) ;
+  \item \textbf{Evoformer} : un réseau de neurones fait circuler l'information entre le MSA et une \og représentation de paires \fg{}, qui décrit pour chaque couple de résidus $(i,j)$ leur relation spatiale probable ;
+  \item \textbf{Module de structure} : il transforme la représentation de paires en coordonnées 3D (squelette, puis chaînes latérales) ;
+  \item \textbf{Recyclage} : la structure obtenue est réinjectée dans le réseau (3 fois par défaut) pour l'affiner.
+\end{enumerate}
+
+\paragraph{Pourquoi des mesures de confiance ?} Une prédiction n'est pas une mesure expérimentale : sa qualité varie d'une protéine à l'autre, et même d'une région à l'autre. AlphaFold2 a été entraîné à \emph{estimer sa propre erreur}. Il produit un score local par résidu, le \textbf{pLDDT}, et une erreur relative entre paires de résidus, la \textbf{PAE} (section~\ref{sec:analyse}). Sans ces scores, l'utilisateur ne pourrait pas distinguer une région fiable d'une région inventée.
+
+\begin{figure}[H]
+  \centering
+  \resizebox{\textwidth}{!}{\input{schema}}
+  \caption{Schéma du fonctionnement général d'AlphaFold2 (réalisation personnelle, d'après~\cite{jumper2021,ebi_course}).}
+  \label{fig:schema}
+\end{figure}
+
+%====================================================================
+\section{Choix technique}
+%====================================================================
+
+Le tableau~\ref{tab:solutions} compare les solutions sérieusement envisagées. La machine disponible est un PC Linux (Debian 12, 12 cœurs, 14~Go de RAM, \textbf{sans GPU NVIDIA}) sur lequel Docker est installé.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+ & \textbf{Installation officielle AlphaFold2}~\cite{alphafold_github} & \textbf{ColabFold sur Google Colab}~\cite{mirdita2022} & \textbf{ColabFold local (Docker)}~\cite{colabfold_github} & \textbf{AlphaFold DB / AlphaFold Server}~\cite{varadi2022,abramson2024} \\
+\midrule
+À installer & Docker, pilotes NVIDIA, scripts DeepMind & Rien (navigateur, compte Google) & Docker + image ColabFold (\textasciitilde 10~Go) + poids (\textasciitilde 5~Go) & Rien (site web) \\
+Calcul & Local & Serveurs Google (GPU gratuit) & Local (CPU ou GPU) & Serveurs EBI / Google \\
+Ressources & GPU recommandé, $\geq$ 64~Go RAM & Aucune localement & CPU suffisant pour $<$ 300 résidus ; GPU optionnel & Aucune \\
+Bases de données & \textasciitilde 2,6~To à télécharger (UniRef, BFD, MGnify, PDB…) & Aucune : MSA via le serveur MMseqs2 public & Aucune : MSA via le serveur MMseqs2 public & Aucune \\
+Avantages & Pipeline de référence, hors ligne & Très simple, rapide (GPU) & Reproductible (version figée), scriptable, pas de limite de session & Instantané \\
+Inconvénients & Irréaliste sur notre machine (disque, GPU) & Session limitée, GPU non garanti, dépend de Google & Lent sur CPU ; Internet requis pour le MSA & DB : protéines déjà prédites seulement ; Server = AlphaFold3, pas AF2 \\
+\bottomrule
+\end{tabularx}
+\caption{Comparaison des solutions envisagées pour exécuter AlphaFold2.}
+\label{tab:solutions}
+\end{table}
+
+\paragraph{Solution retenue : ColabFold~1.5.5 exécuté localement dans Docker}, avec Google Colab documenté comme alternative dans le \texttt{README.md}. ColabFold~\cite{mirdita2022} utilise \emph{exactement les mêmes réseaux et les mêmes poids} qu'AlphaFold2. Il remplace seulement la construction du MSA (HHblits/JackHMMER sur 2,6~To de bases) par une recherche MMseqs2~\cite{steinegger2017} sur un serveur public, qui prend quelques secondes au lieu de plusieurs heures. Ce choix supprime les deux obstacles de l'installation officielle, le disque et le GPU, tout en gardant un calcul local, reproductible et automatisable. Docker fige toutes les dépendances (Python, JAX, TensorFlow) : un étudiant de l'année prochaine obtiendra le même environnement avec une seule commande. Google Colab reste la voie la plus simple pour ceux qui n'ont ni Linux ni Docker, mais nous ne l'avons pas retenu comme solution principale : les sessions sont limitées dans le temps, l'accès au GPU n'est pas garanti et le notebook évolue sans versionnage explicite.
+
+%====================================================================
+\section{Mise en œuvre}
+%====================================================================
+
+\paragraph{Environnement.} Debian GNU/Linux 12 (noyau 6.12), processeur 12 cœurs, 14~Go de RAM, pas de GPU ; Docker~29.8.1 ; Python~3.11.2 pour l'analyse (numpy~2.4, matplotlib~3.11, dans un environnement virtuel). Aucun compte n'est nécessaire ; seule une connexion Internet est requise, pour le MSA et le téléchargement initial.
+
+\paragraph{Étapes.} Les commandes exactes figurent dans le \texttt{README.md} ; en résumé :
+\begin{enumerate}
+  \item \texttt{docker pull ghcr.io/sokrypton/colabfold:1.5.5-cuda12.2.2}, pour une version figée de ColabFold ;
+  \item \texttt{python -m colabfold.download} dans le conteneur : téléchargement des poids AlphaFold2 (5,3~Go) dans un dossier \texttt{cache/} monté en volume, pour ne les télécharger qu'une fois ;
+  \item \texttt{colabfold\_batch --num-models 5 séquence.fasta results/} : MSA via MMseqs2, puis prédiction par les 5 modèles AlphaFold2 (\texttt{alphafold2\_ptm}) ;
+  \item \texttt{scripts/analyse.py} : extraction du pLDDT et de la PAE, et production des figures.
+\end{enumerate}
+Les étapes~2 et~3 sont regroupées dans le script \texttt{scripts/predict.sh}, qui détecte automatiquement la présence d'un GPU.
+
+\paragraph{Difficultés rencontrées et solutions.}
+\begin{itemize}
+  \item \textbf{Pas de GPU} : l'image est compilée pour CUDA, mais JAX bascule automatiquement sur le CPU (message \texttt{no GPU detected, will be using CPU}). Le calcul fonctionne, mais il est lent : \todo{durée} au total pour 149 résidus (voir section~\ref{sec:test}).
+  \item \textbf{Fichiers appartenant à \texttt{root}} : par défaut, le conteneur écrit ses résultats en tant que root. On lance donc Docker avec \texttt{--user \$(id -u):\$(id -g) -e HOME=/tmp}.
+  \item \textbf{Noms de fichiers très longs} : ColabFold nomme les sorties d'après l'en-tête FASTA complet (\texttt{sp\_P0DP23\_CALM1\_HUMAN\_Calmodulin-1\_OS\_Homo\ldots}). Il faut raccourcir l'en-tête (\texttt{>P0DP23}) avant de lancer le calcul.
+  \item \textbf{Mémoire} : TensorFlow affiche des avertissements \texttt{Allocation exceeds 10\% of free system memory}. Ils sont sans conséquence ici : la consommation plafonne à environ 4~Go.
+  \item \textbf{Modèle de rapport} : \texttt{inputenc[utf8x]} et un \texttt{\textbackslash lstset} faisant référence à des macros non définies empêchaient la compilation ; nous les avons remplacés par \texttt{utf8}.
+\end{itemize}
+
+%====================================================================
+\section{Test sur une protéine réelle}
+\label{sec:test}
+%====================================================================
+
+\input{contenu_resultats}
+
+%====================================================================
+\section{Retour d'expérience}
+%====================================================================
+
+\paragraph{Ce qui a fonctionné.} L'image Docker de ColabFold a fonctionné du premier coup sur une machine sans GPU. Le serveur MMseqs2 a construit le MSA en quelques secondes. Le point essentiel est que toute la chaîne, de la séquence à la structure puis aux figures, tient en deux commandes (\texttt{predict.sh} puis \texttt{analyse.py}), sans installation de bases de données.
+
+\paragraph{Ce qui a posé problème.} Le temps de calcul sur CPU (\todo{durée}) est le principal inconvénient. Il devient prohibitif au-delà de quelques centaines de résidus, car le coût croît à peu près comme le carré de la longueur. Viennent ensuite des détails pratiques (droits des fichiers, noms trop longs) qui ne sont documentés nulle part de façon centralisée.
+
+\paragraph{Recommandations.}
+\begin{itemize}
+  \item Sans GPU et pour une protéine de plus de 300 résidus, utiliser le notebook ColabFold sur Google Colab, qui produit exactement les mêmes fichiers ; le script d'analyse s'applique tel quel.
+  \item Pour un premier essai, réduire le calcul avec \texttt{--num-models 1}.
+  \item Toujours lire le pLDDT \emph{et} la PAE avant d'interpréter la structure, et ne jamais conclure sur l'orientation relative de deux domaines sans consulter la PAE.
+  \item Le serveur MMseqs2 est une ressource partagée : ne pas soumettre des centaines de séquences d'un coup.
+\end{itemize}
+
+%====================================================================
+\section*{Utilisation de l'IA générative}
+%====================================================================
+
+Ce projet a été réalisé avec l'aide de Claude (Anthropic), utilisé via Claude Code, pour la comparaison des solutions techniques, la mise en place de l'environnement Docker, l'écriture des scripts \texttt{predict.sh} et \texttt{analyse.py}, la rédaction du \texttt{README.md} et de ce rapport, ainsi que l'interprétation du pLDDT et de la PAE. Tous les contenus ont été relus et vérifiés, en particulier par rapport aux sources citées. Lien public vers la conversation : \todo{lien de partage de la conversation}.

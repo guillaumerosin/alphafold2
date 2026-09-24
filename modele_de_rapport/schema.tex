@@ -1,0 +1,48 @@
+% Schéma personnel du fonctionnement général d'AlphaFold2
+\begin{tikzpicture}[
+  font=\small,
+  node distance=6mm and 8mm,
+  data/.style={draw, rounded corners=2pt, fill=blue!8, align=center, minimum height=10mm, text width=26mm},
+  proc/.style={draw, thick, fill=orange!15, align=center, minimum height=12mm, text width=32mm},
+  outp/.style={draw, rounded corners=2pt, fill=green!12, align=center, minimum height=10mm, text width=30mm},
+  db/.style={draw, cylinder, shape border rotate=90, aspect=0.2, fill=gray!15, align=center, text width=20mm, minimum height=12mm},
+  arr/.style={-{Stealth[length=2.5mm]}, thick},
+  lab/.style={font=\scriptsize\itshape, align=center}
+]
+  % Entrée
+  \node[data] (seq) {\textbf{Séquence}\\\texttt{MADQLTEEQ...}\\(FASTA)};
+
+  % Recherche d'homologues
+  \node[db, above right=2mm and 10mm of seq] (dbseq) {Bases de\\séquences\\(UniRef, env.)};
+  \node[db, below right=2mm and 10mm of seq] (dbpdb) {Gabarits\\(PDB)\\\scriptsize optionnel};
+
+  % Représentations
+  \node[data, right=38mm of seq, yshift=9mm] (msa) {\textbf{MSA}\\séquences homologues\\alignées};
+  \node[data, right=38mm of seq, yshift=-9mm] (pair) {\textbf{Représentation\\de paires} (i,j)};
+
+  % Réseau
+  \node[proc, right=of msa, yshift=-9mm] (evo) {\textbf{Evoformer}\\échange d'information\\MSA $\leftrightarrow$ paires};
+  \node[proc, right=of evo] (sm) {\textbf{Module de\\structure}\\coordonnées 3D};
+
+  % Sorties
+  \node[outp, below=12mm of sm] (pdb) {\textbf{Structure 3D}\\(PDB / mmCIF)};
+  \node[outp, left=of pdb] (conf) {\textbf{Confiance}\\pLDDT (par résidu)\\PAE (par paire)};
+
+  % Flèches
+  \draw[arr] (seq) -- (dbseq) node[lab, midway, above left]{recherche\\(MMseqs2)};
+  \draw[arr] (seq) -- (dbpdb);
+  \draw[arr] (dbseq) -- (msa);
+  \draw[arr] (dbpdb.east) -- (pair.west);
+  \draw[arr] (msa.east) -- (evo);
+  \draw[arr] (pair.east) -- (evo);
+  \draw[arr] (evo) -- (sm);
+  \draw[arr] (sm) -- (pdb);
+  \draw[arr] (sm.south west) -- (conf.north east);
+
+  % Recyclage
+  \draw[arr, dashed, red!70!black] (sm.north) -- ++(0,8mm) -| node[lab, pos=0.25, above]{recyclage ($\times 3$) : la prédiction est réinjectée}  (evo.north);
+
+  % Encadré coévolution
+  \node[draw, dashed, fill=yellow!10, align=left, text width=60mm, font=\scriptsize, below=5mm of dbpdb.south, anchor=north, xshift=-12mm] (coevo)
+  {\textbf{Idée clé : la coévolution.} Si deux résidus sont en contact, une mutation de l'un est souvent compensée par une mutation de l'autre. Les colonnes du MSA qui varient ensemble indiquent donc des résidus proches dans l'espace.};
+\end{tikzpicture}

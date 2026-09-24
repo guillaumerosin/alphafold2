@@ -1,0 +1,14 @@
+2026-09-24 12:03:51,923 Running colabfold 1.5.5
+2026-09-24 12:03:51,956 Unable to initialize backend 'cuda': FAILED_PRECONDITION: No visible GPU devices.
+2026-09-24 12:03:51,956 Unable to initialize backend 'rocm': NOT_FOUND: Could not find registered platform with name: "rocm". Available platform names are: Interpreter CUDA
+2026-09-24 12:03:51,956 Unable to initialize backend 'tpu': module 'jaxlib.xla_extension' has no attribute 'get_tpu_client'
+2026-09-24 12:03:51,959 WARNING: no GPU detected, will be using CPU
+2026-09-24 12:03:52,336 generated new fontManager
+2026-09-24 12:03:54,606 Found 5 citations for tools or databases
+2026-09-24 12:03:54,607 Query 1/1: sp_P0DP23_CALM1_HUMAN_Calmodulin-1_OS_Homo_sapiens_OX_9606_GN_CALM1_PE_1_SV_1 (length 149)
+2026-09-24 12:04:01,568 Setting max_seq=512, max_extra_seq=5120
+2026-09-24 12:11:59,636 alphafold2_ptm_model_1_seed_000 recycle=0 pLDDT=75.3 pTM=0.452
+2026-09-24 12:17:27,724 alphafold2_ptm_model_1_seed_000 recycle=1 pLDDT=79.3 pTM=0.455 tol=2.49
+2026-09-24 12:23:21,528 alphafold2_ptm_model_1_seed_000 recycle=2 pLDDT=79.7 pTM=0.458 tol=0.336
+2026-09-24 12:29:03,114 alphafold2_ptm_model_1_seed_000 recycle=3 pLDDT=79.3 pTM=0.458 tol=0.276
+2026-09-24 12:29:03,114 alphafold2_ptm_model_1_seed_000 took 1492.5s (3 recycles)

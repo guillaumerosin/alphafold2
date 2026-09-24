@@ -1,0 +1,9 @@
+cache/
+.venv/
+__pycache__/
+modele_de_rapport/*.aux
+modele_de_rapport/*.log
+modele_de_rapport/*.out
+modele_de_rapport/*.blg
+modele_de_rapport/*.bbl
+modele_de_rapport/*.synctex.gz

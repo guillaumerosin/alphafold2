@@ -1,0 +1,116 @@
+\documentclass[a4paper]{article}
+
+%====================== PACKAGES ======================
+
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+%pour gérer les positionnement d'images
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{url}
+%pour les informations sur un document compilé en PDF et les liens externes / internes
+\usepackage{hyperref}
+%pour la mise en page des tableaux
+\usepackage{array}
+\usepackage{tabularx}
+%pour utiliser \floatbarrier
+%\usepackage{placeins}
+%\usepackage{floatrow}
+%espacement entre les lignes
+\usepackage{setspace}
+%modifier la mise en page de l'abstract
+\usepackage{abstract}
+%police et mise en page (marges) du document
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+%Pour les galerie d'images
+\usepackage{subfig}
+%tableaux et schémas
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,calc}
+
+%====================== AFFICHAGE DE LISTINGS ======================
+
+\usepackage{listings}
+
+
+\definecolor{javared}{rgb}{0.6,0,0} % for strings
+\definecolor{javagreen}{rgb}{0.25,0.5,0.35} % comments
+\definecolor{javapurple}{rgb}{0.5,0,0.35} % keywords
+\definecolor{javadocblue}{rgb}{0.25,0.35,0.75} % javadoc
+
+\lstset{language=Java,
+	basicstyle=\ttfamily\footnotesize,
+	frame=single,
+	keywordstyle=\color{javapurple}\bfseries,
+	stringstyle=\color{javared},
+	commentstyle=\color{javagreen},
+	morecomment=[s][\color{javadocblue}]{/**}{*/},
+	numbers=left,
+	numberstyle=\tiny\color{black},
+	stepnumber=2,
+	numbersep=10pt,
+	breaklines=true,
+	tabsize=2,
+	showspaces=false,
+	showstringspaces=false}
+
+%====================== INFORMATION ET REGLES ======================
+
+%rajouter les numérotation pour les \paragraphe et \subparagraphe
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{4}
+
+\hypersetup{							% Information sur le document
+pdfauthor = {Guillaume Rosin},			% Auteurs
+pdftitle = {Déployer et comprendre AlphaFold2},	% Titre du document
+pdfsubject = {Projet de bioinformatique},		% Sujet
+pdfkeywords = {AlphaFold2, ColabFold, pLDDT, PAE},	% Mots-clefs
+pdfstartview={FitH}}					% ajuste la page à la largueur de l'écran
+%pdfcreator = {MikTeX},% Logiciel qui a crée le document
+%pdfproducer = {}} % Société avec produit le logiciel
+
+%======================== DEBUT DU DOCUMENT ========================
+
+\begin{document}
+
+%régler l'espacement entre les lignes
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+%page de garde
+\input{./title.tex}
+
+%%% si on souhaite une table des matières, on peut dé-commenter les lignes
+%%% suivantes (de { a })
+% \tableofcontents
+% \thispagestyle{empty}
+% \setcounter{page}{0}
+% %ne pas numéroter le sommaire
+%
+% \newpage
+
+%espacement entre les lignes d'un tableau
+\renewcommand{\arraystretch}{1.5}
+
+%recommencer la numérotation des pages à "1"
+\setcounter{page}{1}
+
+% le contenu du rapport va dans cette partie
+\input{contenu}
+
+% On préfère commencer la bibliographie sur une nouvelle page, 
+% mais on peut commenter la commande suivante pour qu'elle suive
+% immédiatement la fin du dernier chapitre
+\newpage
+
+%choix du style de la bibliographie
+\bibliographystyle{plain}
+%inclusion de la biblio
+\bibliography{bibliographie.bib}
+%voir wiki pour plus d'information sur la syntaxe des entrées d'une bibliographie
+
+\end{document}
