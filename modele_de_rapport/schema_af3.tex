@@ -1,0 +1,51 @@
+% Schéma personnel du fonctionnement général d'AlphaFold3
+\begin{tikzpicture}[
+  font=\small,
+  node distance=6mm and 8mm,
+  data/.style={draw, rounded corners=2pt, fill=blue!8, align=center, minimum height=10mm, text width=30mm},
+  proc/.style={draw, thick, fill=orange!15, align=center, minimum height=12mm, text width=30mm},
+  diff/.style={draw, thick, fill=red!12, align=center, minimum height=12mm, text width=32mm},
+  outp/.style={draw, rounded corners=2pt, fill=green!12, align=center, minimum height=10mm, text width=32mm},
+  arr/.style={-{Stealth[length=2.5mm]}, thick},
+  lab/.style={font=\scriptsize\itshape, align=center}
+]
+  % Entrée : plusieurs types de molécules
+  \node[data, text width=34mm] (in) {\textbf{Liste d'entités}\\protéines, ADN, ARN,\\ligands (SMILES/CCD),\\ions, résidus modifiés};
+
+  % Tokenisation
+  \node[data, right=of in] (tok) {\textbf{Tokenisation}\\1 jeton = 1 résidu,\\1 nucléotide\\ou 1 atome de ligand};
+
+  % Recherches
+  \node[data, above=of tok, text width=36mm] (msa) {\textbf{MSA} (protéines, ARN)\\+ gabarits (option)};
+
+  % Tronc
+  \node[proc, right=of tok] (msamod) {\textbf{Module MSA}\\(4 blocs, allégé)};
+  \node[proc, right=of msamod] (pf) {\textbf{Pairformer}\\(48 blocs)\\paires + jetons,\\sans le MSA};
+
+  % Diffusion
+  \node[diff, below=14mm of pf] (dm) {\textbf{Module de diffusion}\\bruit $\rightarrow$ coordonnées\\de \emph{tous} les atomes};
+
+  % Sorties
+  \node[outp, left=of dm] (pdb) {\textbf{Structure du complexe}\\(mmCIF, plusieurs\\échantillons)};
+  \node[outp, left=of pdb] (conf) {\textbf{Confiance}\\pLDDT par atome,\\PAE, PDE, pTM, ipTM};
+
+  % Flèches
+  \draw[arr] (in) -- (tok);
+  \draw[arr] (in.north) |- (msa.west);
+  \draw[arr] (msa) -| (msamod);
+  \draw[arr] (tok) -- (msamod);
+  \draw[arr] (msamod) -- (pf);
+  \draw[arr] (pf) -- node[lab, right]{conditionne} (dm);
+  \draw[arr] (dm) -- (pdb);
+  \draw[arr] (pdb) -- (conf);
+
+  % Recyclage
+  \draw[arr, dashed, red!70!black] (pf.north) -- ++(0,6mm) -| node[lab, pos=0.25, above]{recyclage} (msamod.north);
+
+  % Boucle de débruitage
+  \draw[arr, dashed, red!70!black] (dm.east) -- ++(6mm,0) |- ++(0,-9mm) -| node[lab, pos=0.25, below]{débruitage itératif (environ 200 pas)} ($(dm.south)+(4mm,0)$);
+
+  % Encadré idée clé
+  \node[draw, dashed, fill=yellow!10, align=left, text width=110mm, font=\scriptsize, below=8mm of conf.south west, anchor=north west] (idee)
+  {\textbf{Idée clé : la diffusion.} Comme un générateur d'images, le modèle part d'un nuage d'atomes aléatoire et le \og débruite \fg{} pas à pas, guidé par le Pairformer. Il n'a plus besoin de règles propres aux acides aminés : il peut donc placer n'importe quel atome.};
+\end{tikzpicture}

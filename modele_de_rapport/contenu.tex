@@ -2,40 +2,42 @@
 \section{Introduction}
 %====================================================================
 
-\paragraph{Qu'est-ce qu'AlphaFold2 ?} AlphaFold2 est un système d'intelligence artificielle développé par Google DeepMind~\cite{jumper2021}. À partir de la seule \textbf{séquence d'acides aminés} d'une protéine, il prédit sa \textbf{structure tridimensionnelle} avec une précision souvent proche de celle des méthodes expérimentales. Il s'attaque ainsi au \og problème du repliement \fg{}, une question ouverte depuis une cinquantaine d'années~\cite{ebi_course}.
+\paragraph{Le défi.} Les protéines sont des éléments fondamentaux du vivant. Chacune possède une forme tridimensionnelle qui détermine sa fonction : catalyser une réaction, transporter une molécule, contracter un muscle. Or la séquence d'acides aminés d'une protéine se lit facilement, alors que sa structure demande des expériences longues et coûteuses (cristallographie, RMN, cryo-microscopie électronique). Prédire la structure à partir de la séquence, c'est le \og problème du repliement \fg{}, ouvert depuis une cinquantaine d'années~\cite{ebi_course}.
 
-\paragraph{Un modèle d'apprentissage profond.} AlphaFold2 repose sur l'\textbf{apprentissage automatique} : au lieu de programmer explicitement les règles physiques du repliement, on laisse le modèle découvrir les régularités présentes dans un grand jeu de données, puis on l'applique à des protéines qu'il n'a jamais vues. Concrètement, il s'agit d'un \textbf{réseau de neurones artificiels}, c'est-à-dire un ensemble de nœuds reliés par des connexions dont le poids est ajusté pendant l'entraînement. Comme ce réseau empile de nombreuses couches, on parle d'\textbf{apprentissage profond}~\cite{ebi_course}. Il a été entraîné sur les structures expérimentales de la \textbf{Protein Data Bank} (PDB), une base publique et gratuite qui contient aujourd'hui plus de 215\,000 structures, associées à leurs séquences~\cite{berman2000}.
+\paragraph{D'AlphaFold2 à AlphaFold3.} En 2020, \textbf{AlphaFold2}, développé par Google DeepMind~\cite{jumper2021}, a résolu en grande partie ce problème pour les protéines isolées. Mais dans la cellule, une protéine fonctionne rarement seule : elle se lie à de l'ADN, à de l'ARN, à des ions, à des cofacteurs ou à des médicaments. AlphaFold2 ne voit rien de tout cela. En mai 2024, \textbf{AlphaFold3}~\cite{abramson2024} a élargi la prédiction à presque toutes les molécules du vivant, réunies dans un même complexe, grâce à une architecture profondément remaniée.
 
-\paragraph{Ni simulation physique, ni simple copie.} AlphaFold2 n'est pas un outil de modélisation par homologie : il peut utiliser des structures connues comme gabarits, mais il n'en a pas besoin, et il est capable de prédire des repliements encore jamais observés~\cite{ebi_course}. Son information principale vient de l'alignement de la séquence avec celles de protéines apparentées : les positions qui évoluent \emph{conjointement} au cours de l'évolution sont probablement en contact dans l'espace (section suivante). La prédiction prend de quelques minutes à quelques dizaines de minutes sur GPU, selon la taille de la protéine. Surtout, AlphaFold2 accompagne chaque structure de \textbf{scores de confiance} (pLDDT, PAE), qui indiquent quelles régions sont fiables et lesquelles ne le sont pas.
-
-\paragraph{Un tournant pour la biologie structurale.} En 2020, AlphaFold2 a remporté la 14\textsuperscript{e} édition de CASP (\emph{Critical Assessment of protein Structure Prediction}), une compétition bisannuelle où les participants doivent prédire des structures résolues expérimentalement mais pas encore publiées. Au vu de ses résultats, les organisateurs ont jugé le problème \og en grande partie résolu pour les protéines individuelles \fg{}~\cite{kryshtafovych2021}. Le code et les poids sont libres~\cite{alphafold_github}, et la base \textbf{AlphaFold DB} fournit gratuitement des structures précalculées pour la quasi-totalité des $\sim$200 millions d'entrées d'UniProt~\cite{varadi2022}. Fin 2023, l'article original avait déjà été cité plus de 15\,000 fois, et AlphaFold DB avait accueilli 1,65 million de visiteurs venant de plus de 180 pays~\cite{ebi_course}.
-
-\paragraph{Objectif du projet.} Ce projet vise à \emph{déployer} AlphaFold2 sur une machine ordinaire et à \emph{comprendre} ses résultats. Nous présentons d'abord son fonctionnement général, puis nous comparons les différentes façons de l'exécuter et justifions notre choix (ColabFold dans Docker). Nous décrivons ensuite la mise en œuvre et l'appliquons à une protéine réelle, la calmoduline humaine, dont nous analysons la prédiction à l'aide du pLDDT et de la PAE.
+\paragraph{Objectif du projet.} Le projet portait au départ sur AlphaFold2. Nous l'avons réorienté vers AlphaFold3, qui le remplace pour la plupart des usages. Le rapport répond à trois questions :
+\begin{enumerate}
+  \item \textbf{Que faisait AlphaFold2}, et comment ?
+  \item \textbf{Pourquoi est-il aujourd'hui dépassé}, et qu'apporte AlphaFold3 ?
+  \item \textbf{Comment utiliser AlphaFold3 et interpréter ses résultats} ?
+\end{enumerate}
+Nous gardons notre déploiement d'AlphaFold2 (ColabFold dans Docker) comme \emph{expérience de référence} : sa prédiction de la calmoduline montre concrètement l'une de ses limites. Nous utilisons ensuite AlphaFold3 via AlphaFold Server sur une protéine test, l'ubiquitine humaine, et analysons les nouveaux scores de confiance.
 
 %====================================================================
-\section{AlphaFold2 : principe général}
+\section{Ce que faisait AlphaFold2}
 %====================================================================
 
-\paragraph{Le problème.} La séquence d'acides aminés d'une protéine détermine sa structure tridimensionnelle~\cite{anfinsen1973}, mais le nombre de conformations possibles est tel qu'une exploration exhaustive est impossible. On appelle cela le \og problème du repliement \fg{}~\cite{ebi_course}. Plutôt que de simuler le repliement physique, AlphaFold2~\cite{jumper2021} \emph{apprend}, à partir des structures connues de la PDB, la relation entre séquence et structure.
+\paragraph{Un modèle d'apprentissage profond.} AlphaFold2 ne simule pas la physique du repliement. C'est un \textbf{réseau de neurones} qui a \emph{appris} la relation entre séquence et structure à partir des structures expérimentales de la \textbf{Protein Data Bank} (PDB), une base publique qui contient aujourd'hui plus de 215\,000 structures~\cite{berman2000}. Il peut utiliser des structures connues comme gabarits, mais il n'en a pas besoin, et il prédit aussi des repliements jamais observés~\cite{ebi_course}.
 
-\paragraph{Entrée et sortie.} L'utilisateur fournit uniquement la \textbf{séquence} de la protéine (format FASTA). AlphaFold2 renvoie les \textbf{coordonnées 3D} de tous les atomes lourds (fichier PDB ou mmCIF), accompagnées de \textbf{mesures de confiance}.
+\paragraph{Entrée et sortie.} L'utilisateur fournit uniquement la \textbf{séquence} d'une protéine (format FASTA). AlphaFold2 renvoie les \textbf{coordonnées 3D} de ses atomes lourds (fichier PDB ou mmCIF), accompagnées de \textbf{mesures de confiance}.
 
-\paragraph{Le MSA et la coévolution.} La première étape consiste à rechercher, dans de grandes bases de séquences, des protéines \emph{homologues} (issues d'un ancêtre commun) et à les aligner : c'est l'\textbf{alignement multiple de séquences} (MSA). Chaque ligne est une séquence homologue et chaque colonne une position équivalente de la protéine. Le MSA apporte deux informations structurales :
+\paragraph{Le MSA et la coévolution.} La première étape consiste à rechercher, dans de grandes bases de séquences, des protéines \emph{homologues} (issues d'un ancêtre commun) et à les aligner : c'est l'\textbf{alignement multiple de séquences} (MSA). Le MSA apporte deux informations structurales :
 \begin{itemize}
   \item la \textbf{conservation} : une position qui ne varie jamais est probablement essentielle (cœur hydrophobe, site actif) ;
-  \item la \textbf{coévolution} : si deux résidus sont en contact, une mutation de l'un est souvent compensée par une mutation de l'autre, sinon la protéine perd sa structure. Deux colonnes qui varient \emph{ensemble} indiquent donc deux résidus probablement proches dans l'espace~\cite{ebi_course}.
+  \item la \textbf{coévolution} : si deux résidus sont en contact, une mutation de l'un est souvent compensée par une mutation de l'autre. Deux colonnes qui varient \emph{ensemble} indiquent donc deux résidus probablement proches dans l'espace~\cite{ebi_course}.
 \end{itemize}
 Plus le MSA est profond et diversifié, plus ces signaux sont fiables. À l'inverse, une protéine \og orpheline \fg{}, sans homologues, est en général mal prédite.
 
 \paragraph{Les grandes étapes.} La figure~\ref{fig:schema} résume le processus :
 \begin{enumerate}
-  \item \textbf{Recherche d'homologues} dans les bases de séquences (MSA) et, en option, de structures connues similaires (\emph{gabarits}) ;
-  \item \textbf{Evoformer} : un réseau de neurones fait circuler l'information entre le MSA et une \og représentation de paires \fg{}, qui décrit pour chaque couple de résidus $(i,j)$ leur relation spatiale probable ;
-  \item \textbf{Module de structure} : il transforme la représentation de paires en coordonnées 3D (squelette, puis chaînes latérales) ;
+  \item \textbf{Recherche d'homologues} (MSA) et, en option, de structures similaires (\emph{gabarits}) ;
+  \item \textbf{Evoformer} (48 blocs) : le réseau fait circuler l'information entre le MSA et une \og représentation de paires \fg{}, qui décrit pour chaque couple de résidus $(i,j)$ leur relation spatiale probable ;
+  \item \textbf{Module de structure} : il place chaque résidu comme un petit repère rigide (position et orientation du squelette), puis ajoute les chaînes latérales par leurs angles de torsion ;
   \item \textbf{Recyclage} : la structure obtenue est réinjectée dans le réseau (3 fois par défaut) pour l'affiner.
 \end{enumerate}
 
-\paragraph{Pourquoi des mesures de confiance ?} Une prédiction n'est pas une mesure expérimentale : sa qualité varie d'une protéine à l'autre, et même d'une région à l'autre. AlphaFold2 a été entraîné à \emph{estimer sa propre erreur}. Il produit un score local par résidu, le \textbf{pLDDT}, et une erreur relative entre paires de résidus, la \textbf{PAE} (section~\ref{sec:analyse}). Sans ces scores, l'utilisateur ne pourrait pas distinguer une région fiable d'une région inventée.
+\paragraph{Des mesures de confiance.} Une prédiction n'est pas une mesure : sa qualité varie d'une protéine à l'autre et d'une région à l'autre. AlphaFold2 a donc été entraîné à \emph{estimer sa propre erreur}. Il produit un score local par résidu, le \textbf{pLDDT}, et une erreur relative entre paires de résidus, la \textbf{PAE} (section~\ref{sec:analyse}).
 
 \begin{figure}[H]
   \centering
@@ -44,76 +46,205 @@ Plus le MSA est profond et diversifié, plus ces signaux sont fiables. À l'inve
   \label{fig:schema}
 \end{figure}
 
+\paragraph{Un tournant pour la biologie structurale.} En 2020, AlphaFold2 a remporté la 14\textsuperscript{e} édition de CASP, compétition où l'on prédit des structures résolues mais pas encore publiées. Les organisateurs ont jugé le problème \og en grande partie résolu pour les protéines individuelles \fg{}~\cite{kryshtafovych2021}. Le code et les poids sont libres~\cite{alphafold_github}, et la base \textbf{AlphaFold DB} fournit gratuitement des structures précalculées pour la quasi-totalité des $\sim$200 millions de protéines d'UniProt~\cite{varadi2022}. Une variante, \textbf{AlphaFold-Multimer}~\cite{evans2021}, a ensuite permis de prédire des complexes formés de \emph{plusieurs protéines}.
+
 %====================================================================
-\section{Choix technique}
+\section{Pourquoi AlphaFold2 est aujourd'hui dépassé}
 %====================================================================
 
-Le tableau~\ref{tab:solutions} compare les solutions sérieusement envisagées. La machine disponible est un PC Linux (Debian 12, 12 cœurs, 14~Go de RAM, \textbf{sans GPU NVIDIA}) sur lequel Docker est installé.
+AlphaFold2 reste un excellent outil pour une protéine isolée. Mais ses limites tiennent à sa conception même, et AlphaFold3 les lève presque toutes.
+
+\paragraph{Il ne voit que des protéines.} AlphaFold2 ne connaît que les 20 acides aminés standards. Il ignore l'ADN, l'ARN, les ions métalliques, les cofacteurs (hème, ATP, NAD), les médicaments et les modifications post-traductionnelles (phosphorylation, glycosylation). Or ces partenaires changent souvent la structure : notre propre prédiction de la calmoduline en est un exemple. Cette protéine fixe quatre ions Ca$^{2+}$ qui modifient la conformation de ses lobes, mais AlphaFold2 la prédit \emph{sans} ses ions (section~\ref{sec:test}). Pour étudier une interaction protéine--ligand, il fallait enchaîner AlphaFold2 avec un logiciel de docking séparé.
+
+\paragraph{Une architecture taillée pour les protéines.} Le module de structure d'AlphaFold2 raisonne en \og résidus \fg{} : un repère rigide pour le squelette, puis des angles de torsion pour les chaînes latérales. Ce codage est propre aux acides aminés et ne s'étend pas à une petite molécule quelconque. De plus, la géométrie obtenue n'est pas toujours chimiquement propre, d'où une étape optionnelle de relaxation physique (Amber) après la prédiction~\cite{jumper2021}.
+
+\paragraph{Une forte dépendance au MSA.} L'Evoformer consacre une grande partie de son calcul au MSA. La qualité de la prédiction dépend donc fortement de la profondeur de l'alignement, et le pipeline officiel exige jusqu'à 2,6~To de bases de séquences~\cite{alphafold_github}.
+
+\paragraph{Les complexes, un ajout tardif.} AlphaFold-Multimer~\cite{evans2021} gère plusieurs chaînes protéiques, mais reste limité aux protéines. Ses performances sur les interfaces difficiles, comme les complexes anticorps--antigène, restent modestes~\cite{abramson2024}.
+
+En résumé, AlphaFold2 répond à la question \og quelle est la forme de cette protéine, seule ? \fg{}. La biologie et la pharmacologie demandent plutôt \og comment cette protéine s'assemble-t-elle avec ses partenaires ? \fg{}. C'est la question à laquelle répond AlphaFold3.
+
+%====================================================================
+\section{AlphaFold3 : ce qui change}
+%====================================================================
+
+\paragraph{Entrée : une liste de molécules.} AlphaFold3~\cite{abramson2024} prend en entrée une \emph{liste d'entités}, chacune avec son nombre de copies : chaînes protéiques, ADN, ARN, ligands (donnés par leur code dans le dictionnaire chimique de la PDB, ou par une formule SMILES), ions, et résidus modifiés. Il renvoie la structure 3D de \emph{tout le complexe}, à l'échelle de l'atome.
+
+\paragraph{Une architecture remaniée.} La figure~\ref{fig:schema_af3} présente les grandes étapes. Trois changements comptent :
+\begin{itemize}
+  \item \textbf{Des jetons plutôt que des résidus.} Chaque résidu de protéine ou nucléotide forme un jeton ; chaque atome d'un ligand forme un jeton à lui seul. Le réseau traite ainsi toutes les molécules de la même façon.
+  \item \textbf{Un MSA moins central.} Le MSA n'est plus traité que par un petit \og module MSA \fg{} de 4 blocs. Le tronc du réseau, le \textbf{Pairformer} (48 blocs), remplace l'Evoformer et travaille uniquement sur la représentation de paires et sur une représentation par jeton, sans le MSA.
+  \item \textbf{Un module de diffusion.} Au lieu de repères et d'angles de torsion, AlphaFold3 prédit directement les coordonnées de \emph{tous les atomes}. Comme les générateurs d'images, il part d'un nuage aléatoire qu'il \og débruite \fg{} progressivement, guidé par le Pairformer. Ce procédé n'a besoin d'aucune règle propre aux acides aminés, ce qui lui permet de placer n'importe quelle molécule. En relançant la diffusion avec des graines différentes, on obtient plusieurs structures possibles.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \resizebox{\textwidth}{!}{\input{schema_af3}}
+  \caption{Schéma du fonctionnement général d'AlphaFold3 (réalisation personnelle, d'après~\cite{abramson2024}).}
+  \label{fig:schema_af3}
+\end{figure}
+
+\paragraph{Des scores de confiance étendus.} AlphaFold3 conserve les scores d'AlphaFold2 et les adapte aux complexes~\cite{abramson2024,alphafold_server} :
+\begin{itemize}
+  \item le \textbf{pLDDT} est calculé \emph{par atome} et non plus par résidu ; pour un ligand, il ne mesure que les erreurs entre ses atomes et les polymères voisins ;
+  \item la \textbf{PAE} est définie entre jetons ; pour un ligand, un repère de référence est construit pour chaque atome à partir de ses voisins ;
+  \item la \textbf{PDE} (\emph{predicted distance error}) estime l'erreur sur la distance entre deux jetons ;
+  \item le \textbf{pTM} juge le repliement global : au-dessus de 0,5, la forme d'ensemble est probablement correcte~\cite{zhang2004} ;
+  \item l'\textbf{ipTM} juge la position relative des chaînes dans le complexe : au-dessus de 0,8, la prédiction est fiable ; en dessous de 0,6, elle est probablement fausse ; entre les deux, c'est une zone grise.
+\end{itemize}
+
+\paragraph{Des performances supérieures.} Sur le banc d'essai PoseBusters~\cite{buttenschoen2024}, qui compare des poses de ligands à des structures expérimentales, AlphaFold3 place correctement (à moins de 2~Å) environ 76~\% des ligands, sans recevoir la structure de la protéine. Il dépasse ainsi les outils de docking classiques, qui en ont pourtant besoin. Il améliore aussi nettement la prédiction des complexes protéine--acides nucléiques et anticorps--antigène par rapport à AlphaFold-Multimer, et reste au moins aussi bon qu'AlphaFold2 sur les protéines seules~\cite{abramson2024}. Pour la première fois, un modèle généraliste rivalise avec des outils spécialisés.
 
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
- & \textbf{Installation officielle AlphaFold2}~\cite{alphafold_github} & \textbf{ColabFold sur Google Colab}~\cite{mirdita2022} & \textbf{ColabFold local (Docker)}~\cite{colabfold_github} & \textbf{AlphaFold DB / AlphaFold Server}~\cite{varadi2022,abramson2024} \\
+ & \textbf{AlphaFold2 (2020--2021)} & \textbf{AlphaFold3 (2024)} \\
 \midrule
-À installer & Docker, pilotes NVIDIA, scripts DeepMind & Rien (navigateur, compte Google) & Docker + image ColabFold (\textasciitilde 10~Go) + poids (\textasciitilde 5~Go) & Rien (site web) \\
-Calcul & Local & Serveurs Google (GPU gratuit) & Local (CPU ou GPU) & Serveurs EBI / Google \\
-Ressources & GPU recommandé, $\geq$ 64~Go RAM & Aucune localement & CPU suffisant pour $<$ 300 résidus ; GPU optionnel & Aucune \\
-Bases de données & \textasciitilde 2,6~To à télécharger (UniRef, BFD, MGnify, PDB…) & Aucune : MSA via le serveur MMseqs2 public & Aucune : MSA via le serveur MMseqs2 public & Aucune \\
-Avantages & Pipeline de référence, hors ligne & Très simple, rapide (GPU) & Reproductible (version figée), scriptable, pas de limite de session & Instantané \\
-Inconvénients & Irréaliste sur notre machine (disque, GPU) & Session limitée, GPU non garanti, dépend de Google & Lent sur CPU ; Internet requis pour le MSA & DB : protéines déjà prédites seulement ; Server = AlphaFold3, pas AF2 \\
+Molécules & Protéines seules (complexes protéiques via Multimer) & Protéines, ADN, ARN, ligands, ions, résidus modifiés \\
+Unité de base & Résidu & Jeton (résidu, nucléotide ou atome de ligand) \\
+Tronc du réseau & Evoformer (48 blocs, MSA au centre) & Module MSA (4 blocs) + Pairformer (48 blocs) \\
+Construction 3D & Module de structure (repères + torsions), relaxation Amber optionnelle & Module de diffusion, directement sur les atomes \\
+Confiance & pLDDT par résidu, PAE, pTM (ipTM avec Multimer) & pLDDT par atome, PAE, PDE, pTM, ipTM \\
+Licence & Code et poids libres (Apache~2.0, CC~BY~4.0) & Code libre ; poids sur demande, usage académique non commercial \\
+Accès simple & ColabFold, AlphaFold DB & AlphaFold Server (navigateur) \\
 \bottomrule
 \end{tabularx}
-\caption{Comparaison des solutions envisagées pour exécuter AlphaFold2.}
+\caption{Comparaison d'AlphaFold2 et d'AlphaFold3.}
+\label{tab:af2_af3}
+\end{table}
+
+%====================================================================
+\section{Choix technique}
+%====================================================================
+
+Le tableau~\ref{tab:solutions} compare les solutions envisagées. La machine disponible est un PC Linux (Debian 12, 12 cœurs, 14~Go de RAM, \textbf{sans GPU NVIDIA}) sur lequel Docker est installé.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+ & \textbf{AlphaFold Server (AF3)}~\cite{alphafold_server} & \textbf{AlphaFold3 local}~\cite{alphafold3_github} & \textbf{ColabFold local, Docker (AF2)}~\cite{colabfold_github} & \textbf{AlphaFold2 officiel}~\cite{alphafold_github} \\
+\midrule
+À installer & Rien (navigateur, compte Google) & Docker, pilotes NVIDIA, code DeepMind, poids sur demande & Docker + image ColabFold (\textasciitilde 10~Go) + poids (\textasciitilde 5~Go) & Docker, pilotes NVIDIA, scripts DeepMind \\
+Calcul & Serveurs Google & Local & Local (CPU ou GPU) & Local \\
+Ressources & Aucune localement & GPU obligatoire (A100/H100 80~Go conseillé ; 16~Go limite à 1\,280 jetons) & CPU suffisant pour $<$ 300 résidus & GPU recommandé, $\geq$ 64~Go RAM \\
+Bases de données & Aucune & \textasciitilde 630~Go & Aucune : MSA via serveur MMseqs2 & \textasciitilde 2,6~To, ou \textasciitilde 500~Go en \texttt{reduced\_dbs} \\
+Avantages & Immédiat, AF3 complet, gratuit & Tous les ligands, scriptable, pas de quota & Reproductible, scriptable & Pipeline de référence, hors ligne \\
+Inconvénients & Quota journalier (30 tâches), pas d'API, liste de ligands restreinte, non commercial & Impossible sans GPU ; licence stricte, poids non redistribuables & AF2 seulement ; lent sur CPU & AF2 seulement ; irréaliste sur notre machine \\
+\bottomrule
+\end{tabularx}
+\caption{Comparaison des solutions envisagées.}
 \label{tab:solutions}
 \end{table}
 
-\paragraph{Solution retenue : ColabFold~1.5.5 exécuté localement dans Docker}, avec Google Colab documenté comme alternative dans le \texttt{README.md}. ColabFold~\cite{mirdita2022} utilise \emph{exactement les mêmes réseaux et les mêmes poids} qu'AlphaFold2. Il remplace seulement la construction du MSA (HHblits/JackHMMER sur 2,6~To de bases) par une recherche MMseqs2~\cite{steinegger2017} sur un serveur public, qui prend quelques secondes au lieu de plusieurs heures. Ce choix supprime les deux obstacles de l'installation officielle, le disque et le GPU, tout en gardant un calcul local, reproductible et automatisable. Docker fige toutes les dépendances (Python, JAX, TensorFlow) : un étudiant de l'année prochaine obtiendra le même environnement avec une seule commande. Google Colab reste la voie la plus simple pour ceux qui n'ont ni Linux ni Docker, mais nous ne l'avons pas retenu comme solution principale : les sessions sont limitées dans le temps, l'accès au GPU n'est pas garanti et le notebook évolue sans versionnage explicite.
+\paragraph{Solution retenue pour AlphaFold3 : AlphaFold Server.} L'installation locale d'AlphaFold3 exige un GPU récent, absent de notre machine : elle est exclue. AlphaFold Server~\cite{alphafold_server} donne accès gratuitement au modèle complet depuis un navigateur, pour un usage non commercial. Son quota (30 tâches par jour, constaté à la connexion) suffit largement pour ce projet. Ses limites sont l'absence d'API, qui empêche l'automatisation, et une liste de ligands plus restreinte que la version locale.
+
+\paragraph{Référence AlphaFold2 : ColabFold~1.5.5 dans Docker.} Pour comparer, nous avons conservé notre déploiement d'AlphaFold2. ColabFold~\cite{mirdita2022} utilise \emph{les mêmes réseaux et les mêmes poids} qu'AlphaFold2 ; il remplace seulement la construction du MSA (2,6~To de bases) par une recherche MMseqs2~\cite{steinegger2017} sur un serveur public. Il tourne sur CPU, dans un environnement figé par Docker.
+
+\paragraph{AlphaFold2 officiel en mode \texttt{reduced\_dbs}.} Nous avons aussi déployé l'installation officielle de DeepMind~\cite{alphafold_github}. Le disque ne permet pas d'accueillir les \textasciitilde 2,6~To de la configuration complète : nous avons donc utilisé l'option \texttt{--db\_preset=reduced\_dbs}. Elle ne modifie que la construction du MSA ; le réseau, ses poids et la prédiction restent identiques. En mode complet, AlphaFold interroge UniRef90 et MGnify avec JackHMMER, puis BFD (\textasciitilde 1,8~To, en partie métagénomique) et UniRef30 (\textasciitilde 200~Go) avec HHblits. En mode \texttt{reduced\_dbs}, ces deux grosses bases sont remplacées par \textbf{small BFD} (\textasciitilde 17~Go), un sous-ensemble de BFD débarrassé de la plupart de ses séquences redondantes. L'alignement est un peu moins riche, ce qui pénalise surtout les protéines \og orphelines \fg{} ; pour la grande majorité des protéines, la différence est faible, et la recherche est plus rapide.
 
 %====================================================================
 \section{Mise en œuvre}
 %====================================================================
 
-\paragraph{Environnement.} Debian GNU/Linux 12 (noyau 6.12), processeur 12 cœurs, 14~Go de RAM, pas de GPU ; Docker~29.8.1 ; Python~3.11.2 pour l'analyse (numpy~2.4, matplotlib~3.11, dans un environnement virtuel). Aucun compte n'est nécessaire ; seule une connexion Internet est requise, pour le MSA et le téléchargement initial.
+\subsection{AlphaFold3 via AlphaFold Server}
 
-\paragraph{Étapes.} Les commandes exactes figurent dans le \texttt{README.md} ; en résumé :
 \begin{enumerate}
-  \item \texttt{docker pull ghcr.io/sokrypton/colabfold:1.5.5-cuda12.2.2}, pour une version figée de ColabFold ;
-  \item \texttt{python -m colabfold.download} dans le conteneur : téléchargement des poids AlphaFold2 (5,3~Go) dans un dossier \texttt{cache/} monté en volume, pour ne les télécharger qu'une fois ;
-  \item \texttt{colabfold\_batch --num-models 5 séquence.fasta results/} : MSA via MMseqs2, puis prédiction par les 5 modèles AlphaFold2 (\texttt{alphafold2\_ptm}) ;
+  \item Se connecter sur \url{https://alphafoldserver.com} avec un compte Google. Le compteur \og Emplois restants \fg{} indique le quota du jour (30).
+  \item Laisser \og Type d'entité \fg{} sur \emph{Protéine} et \og Copies \fg{} sur 1, puis coller la séquence dans le champ prévu. Le bouton \og Ajouter une entité \fg{} permet d'ajouter d'autres chaînes, de l'ADN, de l'ARN, un ligand ou un ion : c'est là que se voit la différence avec AlphaFold2.
+  \item Cliquer sur \og Continuer et prévisualiser l'emploi \fg{}, nommer la tâche, puis confirmer l'envoi.
+  \item La tâche apparaît dans l'historique avec le statut \og En cours \fg{}, puis une coche quand elle est terminée. Le bouton \og Télécharger \fg{} fournit une archive avec les structures (mmCIF) et les fichiers de scores (JSON).
+\end{enumerate}
+
+\subsection{AlphaFold2 via ColabFold (référence)}
+
+\paragraph{Environnement.} Debian GNU/Linux 12 (noyau 6.12), 12 cœurs, 14~Go de RAM, pas de GPU ; Docker~29.8.1 ; Python~3.11.2 pour l'analyse (numpy~2.4, matplotlib~3.11). Les commandes exactes figurent dans le \texttt{README.md} :
+\begin{enumerate}
+  \item \texttt{docker pull ghcr.io/sokrypton/colabfold:1.5.5-cuda12.2.2}, pour une version figée ;
+  \item \texttt{python -m colabfold.download} dans le conteneur : téléchargement des poids (5,3~Go) dans un dossier \texttt{cache/} monté en volume ;
+  \item \texttt{colabfold\_batch --num-models 5 séquence.fasta results/} : MSA via MMseqs2, puis prédiction par les 5 modèles AlphaFold2 ;
   \item \texttt{scripts/analyse.py} : extraction du pLDDT et de la PAE, et production des figures.
 \end{enumerate}
-Les étapes~2 et~3 sont regroupées dans le script \texttt{scripts/predict.sh}, qui détecte automatiquement la présence d'un GPU.
+Les étapes~2 et~3 sont regroupées dans \texttt{scripts/predict.sh}, qui détecte automatiquement la présence d'un GPU.
 
 \paragraph{Difficultés rencontrées et solutions.}
 \begin{itemize}
-  \item \textbf{Pas de GPU} : l'image est compilée pour CUDA, mais JAX bascule automatiquement sur le CPU (message \texttt{no GPU detected, will be using CPU}). Le calcul fonctionne, mais il est lent : 1~h~57 au total pour 149 résidus et 5 modèles, soit environ 23~min par modèle (voir section~\ref{sec:test}).
-  \item \textbf{Fichiers appartenant à \texttt{root}} : par défaut, le conteneur écrit ses résultats en tant que root. On lance donc Docker avec \texttt{--user \$(id -u):\$(id -g) -e HOME=/tmp}.
-  \item \textbf{Noms de fichiers très longs} : ColabFold nomme les sorties d'après l'en-tête FASTA complet (une centaine de caractères, par exemple \texttt{sp\_P0DP23\_CALM1\_\ldots}). Il faut raccourcir l'en-tête (\texttt{>P0DP23}) avant de lancer le calcul.
-  \item \textbf{Mémoire} : TensorFlow affiche des avertissements \texttt{Allocation exceeds 10\% of free system memory}. Ils sont sans conséquence ici : la consommation plafonne à environ 4~Go.
-  \item \textbf{Modèle de rapport} : \texttt{inputenc[utf8x]} et un \texttt{\textbackslash lstset} faisant référence à des macros non définies empêchaient la compilation ; nous les avons remplacés par \texttt{utf8}.
+  \item \textbf{Pas de GPU} : JAX bascule automatiquement sur le CPU. Le calcul fonctionne, mais il est lent : 1~h~57 pour 149 résidus et 5 modèles.
+  \item \textbf{Fichiers appartenant à \texttt{root}} : on lance Docker avec \texttt{--user \$(id -u):\$(id -g) -e HOME=/tmp}.
+  \item \textbf{Noms de fichiers très longs} : ColabFold nomme les sorties d'après l'en-tête FASTA complet ; il faut le raccourcir (\texttt{>P0DP23}).
+  \item \textbf{Mémoire} : les avertissements \texttt{Allocation exceeds 10\% of free system memory} sont sans conséquence ; la consommation plafonne à environ 4~Go.
 \end{itemize}
 
 %====================================================================
-\section{Test sur une protéine réelle}
+\section{Expérience de référence : la calmoduline avec AlphaFold2}
 \label{sec:test}
 %====================================================================
 
 \input{contenu_resultats}
 
 %====================================================================
+\section{Test d'AlphaFold3 : l'ubiquitine humaine}
+\label{sec:af3}
+%====================================================================
+
+\paragraph{Protéine choisie.} Pour un premier essai, nous avons pris l'\textbf{ubiquitine humaine}, une petite protéine de 76 acides aminés dont la structure expérimentale est connue à 1,8~Å de résolution (PDB \textbf{1UBQ}). La séquence a été récupérée depuis la page \og Sequence \fg{} de l'entrée 1UBQ sur le site de la PDB :
+
+\begin{center}
+\scriptsize\ttfamily
+MQIFVKTLTGKTITLEVEPSDTIENVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLSDYNIQKES\\
+TLHLVLRLRGG
+\end{center}
+
+% À AJOUTER : capture d'écran du résultat AlphaFold Server, enregistrée sous figures/af3_ubiquitine.png
+\begin{figure}[H]
+  \centering
+  \IfFileExists{../figures/af3_ubiquitine.png}{%
+    \includegraphics[width=0.95\textwidth]{../figures/af3_ubiquitine.png}%
+  }{%
+    \fbox{\parbox[c][4cm][c]{0.9\textwidth}{\centering Capture d'écran AlphaFold Server à ajouter\\(\texttt{figures/af3\_ubiquitine.png})}}%
+  }
+  \caption{Résultat d'AlphaFold3 (AlphaFold Server) pour l'ubiquitine : structure colorée par pLDDT (à gauche) et matrice PAE (à droite).}
+  \label{fig:af3_ubiquitine}
+\end{figure}
+
+\paragraph{La forme.} La structure (figure~\ref{fig:af3_ubiquitine}) montre un \textbf{feuillet $\beta$} qui s'enroule autour d'une \textbf{hélice $\alpha$}. C'est le repliement \og $\beta$-grasp \fg{}, caractéristique de l'ubiquitine : compact et très stable.
+
+\paragraph{Le pLDDT.} La légende d'AlphaFold Server reprend les classes de confiance d'AlphaFold2 : bleu foncé ($>$ 90), bleu clair (70--90), jaune (50--70) et orange ($<$ 50). L'ubiquitine est presque entièrement bleu foncé ; seule la queue C-terminale passe au bleu clair puis au jaune. Ce résultat est cohérent avec la biologie : cette queue flexible se termine par la glycine~76, qui se lie de façon covalente aux protéines cibles lors de l'ubiquitination.
+
+\paragraph{La PAE.} La matrice est vert foncé presque partout : la protéine forme un seul bloc rigide, dont les positions relatives sont fiables. Seule une bande plus claire apparaît pour les résidus 72 à 76 : la position de la queue par rapport au reste de la protéine est incertaine. Sur une protéine à plusieurs domaines, on verrait au contraire plusieurs carrés foncés séparés par des zones claires, comme pour la calmoduline (figure~\ref{fig:pae}).
+
+\paragraph{pTM et ipTM.} L'ipTM n'est pas défini ici, puisqu'il n'y a qu'une seule chaîne. Il devient le score central dès que l'on ajoute une entité (seconde protéine, ADN, ligand). Il faut aussi savoir que le score TM est très sévère pour les petites structures : sous une vingtaine de jetons, le pTM est presque nul, et il vaut mieux se fier au pLDDT et à la PAE.
+
+% PROLONGEMENT À FAIRE : soumettre la calmoduline (P0DP23) avec 4 ions Ca2+ sur AlphaFold Server
+% et comparer le pLDDT, la PAE et l'orientation des lobes à la prédiction AlphaFold2 de la section sec:test.
+
+%====================================================================
+\section{Limites d'AlphaFold3}
+%====================================================================
+
+AlphaFold3 dépasse AlphaFold2, mais il ne règle pas tout.
+\begin{itemize}
+  \item \textbf{Des hallucinations.} Un modèle de diffusion produit toujours une structure, même là où il n'y en a pas. Dans les régions désordonnées, AlphaFold3 peut dessiner une hélice ou un repliement bien ordonné qui n'existe pas en réalité. Pour limiter ce défaut, ses auteurs l'ont entraîné aussi sur des prédictions d'AlphaFold-Multimer, où ces régions apparaissent sous forme de longues boucles étirées~\cite{abramson2024}. Il faut donc toujours lire le pLDDT avant d'interpréter une région.
+  \item \textbf{Une structure statique.} Comme AlphaFold2, AlphaFold3 prédit un état stable. Il ne donne ni la dynamique, ni les changements de conformation, ni les affinités de liaison. Il ne remplace ni l'expérience, ni la dynamique moléculaire.
+  \item \textbf{Des chimies nouvelles mal prédites.} La précision chute quand un ligand s'éloigne chimiquement de ceux vus à l'entraînement. Les complexes anticorps--antigène restent difficiles, malgré les progrès.
+  \item \textbf{Un accès moins ouvert.} À sa sortie, ni le code ni les poids n'étaient publiés. Depuis fin 2024, le code est disponible, mais les poids sont accordés sur demande, pour un usage académique non commercial, et ne peuvent pas être redistribués~\cite{alphafold3_github}. AlphaFold2, lui, reste entièrement libre.
+\end{itemize}
+
+%====================================================================
 \section{Retour d'expérience}
 %====================================================================
 
-\paragraph{Ce qui a fonctionné.} L'image Docker de ColabFold a fonctionné du premier coup sur une machine sans GPU. Le serveur MMseqs2 a construit le MSA en quelques secondes. Le point essentiel est que toute la chaîne, de la séquence à la structure puis aux figures, tient en deux commandes (\texttt{predict.sh} puis \texttt{analyse.py}), sans installation de bases de données.
+\paragraph{Ce qui a fonctionné.} AlphaFold Server a rendu AlphaFold3 utilisable sans aucune installation ni GPU : une prédiction de l'ubiquitine se lance en quelques clics. Côté AlphaFold2, l'image Docker de ColabFold a fonctionné du premier coup sur une machine sans GPU, et toute la chaîne tient en deux commandes (\texttt{predict.sh} puis \texttt{analyse.py}).
 
-\paragraph{Ce qui a posé problème.} Le temps de calcul sur CPU (1~h~57 pour 149 résidus) est le principal inconvénient. Il devient prohibitif au-delà de quelques centaines de résidus, car le coût croît à peu près comme le carré de la longueur. Viennent ensuite des détails pratiques (droits des fichiers, noms trop longs) qui ne sont documentés nulle part de façon centralisée.
+\paragraph{Ce qui a posé problème.} Le temps de calcul d'AlphaFold2 sur CPU (1~h~57 pour 149 résidus) est prohibitif au-delà de quelques centaines de résidus. Pour AlphaFold3, l'obstacle n'est plus technique mais d'accès : sans GPU de 40 à 80~Go, seul le serveur est utilisable, avec son quota, sans API et avec une liste de ligands limitée.
 
 \paragraph{Recommandations.}
 \begin{itemize}
-  \item Sans GPU et pour une protéine de plus de 300 résidus, utiliser le notebook ColabFold sur Google Colab, qui produit exactement les mêmes fichiers ; le script d'analyse s'applique tel quel.
-  \item Pour un premier essai, réduire le calcul avec \texttt{--num-models 1}.
-  \item Toujours lire le pLDDT \emph{et} la PAE avant d'interpréter la structure, et ne jamais conclure sur l'orientation relative de deux domaines sans consulter la PAE.
-  \item Le serveur MMseqs2 est une ressource partagée : ne pas soumettre des centaines de séquences d'un coup.
+  \item Pour une protéine seule, AlphaFold2 (ColabFold) reste suffisant, libre et scriptable.
+  \item Dès que la question porte sur une interaction (ADN, ARN, ligand, ion, autre protéine), utiliser AlphaFold3 via AlphaFold Server.
+  \item Toujours lire le pLDDT \emph{et} la PAE avant d'interpréter la structure ; pour un complexe, regarder d'abord l'ipTM.
+  \item Garder une trace des paramètres : graines, entités soumises, scores de confiance.
 \end{itemize}
