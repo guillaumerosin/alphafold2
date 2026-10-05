@@ -234,6 +234,27 @@ AlphaFold3 dépasse AlphaFold2, mais il ne règle pas tout.
 \end{itemize}
 
 %====================================================================
+\section{Et après ? Vers un \og AlphaFold~4 \fg{}}
+%====================================================================
+
+\paragraph{Pas d'AlphaFold~4 officiel.} À la date de ce rapport, Google DeepMind n'a publié aucun modèle nommé AlphaFold~4. L'expression circule pourtant depuis février 2026, à propos d'un modèle développé par \textbf{Isomorphic Labs}, la filiale de DeepMind consacrée à la découverte de médicaments.
+
+\paragraph{IsoDDE, le successeur de fait.} Le 10 février 2026, Isomorphic Labs a présenté son \emph{Drug Design Engine} (\textbf{IsoDDE}) dans un rapport technique~\cite{isodde2026}. IsoDDE reprend les capacités de prédiction de structure d'AlphaFold3 et les complète par des modules dédiés à l'affinité de liaison, à la détection de poches et aux anticorps. Le biologiste computationnel Mohammed AlQuraishi (Columbia University) le décrit comme \og une avancée majeure, à l'échelle d'un AlphaFold~4 \fg{}~\cite{callaway2026}.
+
+\paragraph{Pourquoi il serait meilleur qu'AlphaFold3.} Les gains annoncés visent précisément les limites d'AlphaFold3 décrites à la section précédente~\cite{isodde2026,callaway2026} :
+\begin{itemize}
+  \item \textbf{Des chimies nouvelles.} Sur le banc d'essai Runs N' Poses, pour les complexes protéine--ligand les plus éloignés des données d'entraînement (0 à 20~\% de similarité), IsoDDE fait plus de deux fois mieux qu'AlphaFold3. Il capte aussi l'ajustement induit, c'est-à-dire la déformation de la protéine au contact du ligand.
+  \item \textbf{Les anticorps.} Sur 334 complexes anticorps--antigène peu similaires à l'entraînement, il obtient 2,3 fois plus de prédictions de haute qualité qu'AlphaFold3.
+  \item \textbf{L'affinité de liaison.} AlphaFold3 donne une pose, pas une force de liaison. IsoDDE prédit l'affinité, avec une précision annoncée proche des calculs physiques de référence (perturbation d'énergie libre, FEP), sans structure cristallographique de départ et pour un coût bien moindre.
+  \item \textbf{Les poches cachées.} À partir de la seule séquence, il a retrouvé des sites de liaison connus et nouveaux sur le céréblon, dont des poches \og cryptiques \fg{} qui n'apparaissent qu'en présence d'un ligand.
+\end{itemize}
+Autrement dit, AlphaFold3 répond à la question \og comment ce complexe est-il assemblé ? \fg{}. IsoDDE vise la question suivante du pharmacologue : \og cette molécule va-t-elle se fixer, où, et avec quelle force ? \fg{}.
+
+\paragraph{Un progrès qu'on ne peut pas vérifier.} Contrairement à AlphaFold2 et AlphaFold3, IsoDDE est \textbf{propriétaire} : ni code, ni poids, ni serveur public, et le rapport ne décrit presque pas la méthode. Il est donc impossible de reproduire ces résultats, ni de savoir s'ils viennent d'innovations dans l'algorithme ou de données privées issues des partenariats industriels~\cite{callaway2026}. Ces chiffres sont des annonces de l'entreprise, pas des résultats évalués de façon indépendante. Par ailleurs, en juillet 2026, Google DeepMind a dissous l'équipe dédiée à AlphaFold et réaffecté ses chercheurs à d'autres projets, notamment autour de Gemini ; AlphaFold DB, AlphaFold Server et AlphaFold3 restent toutefois disponibles~\cite{gigazine2026}. Un AlphaFold~4 public, dans la lignée des versions précédentes, semble donc peu probable à court terme.
+
+On retrouve ainsi, en plus marqué, la tendance déjà visible avec AlphaFold3 : à chaque génération, le modèle devient plus puissant, mais moins ouvert. AlphaFold2 était entièrement libre, AlphaFold3 l'est partiellement, et son successeur de fait est réservé à un usage interne. Pour la recherche publique, les alternatives ouvertes, comme Boltz-2, prennent le relais.
+
+%====================================================================
 \section{Retour d'expérience}
 %====================================================================
 
